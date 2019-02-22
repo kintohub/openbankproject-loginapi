@@ -1,0 +1,17 @@
+{
+    "presets": [
+        "env",
+        "stage-0",
+        "stage-3"
+    ],
+    "plugins": [
+        ["babel-plugin-relative-import"],
+        ["transform-decorators-legacy"],
+        ["transform-object-rest-spread"],
+        ["transform-es2015-computed-properties"],
+        ["syntax-object-rest-spread"],
+        ["root-require", {
+            "projectRoot": "./"
+        }]
+    ]
+  }
