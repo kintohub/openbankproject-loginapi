@@ -28,7 +28,7 @@ export const unexpectedReject = (obj) => (({because, _in}) =>
 export const handleSuccessError = function(response){
     const isJson = !!response.headers.get("content-type").match('application/json');
 
-    return response.status == 200 ?
+    return response.status < 300 ?
       (isJson ? response.json() : response.text())
       : response.json().then(error => {
         if (error.message && error.message === "Cannot parse JSON") {

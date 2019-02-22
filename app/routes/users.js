@@ -14,34 +14,26 @@ const userAuthController  =  new UserAuthController();
 
 const meId = 'me';
 
-/// CRUD
-
 /**
  * @api {post} /signup Create new user
  * @apiName CreateUser
  * @apiGroup Users
  *
- * @apiSuccess {Object} User obj
+ * @apiSuccess (Success_200) {Object} User obj
  *
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *    {
- *       data: {user}
- *    }
- *
- * @apiErrorExample {json} Error-Response:
- *      HTTP/1.1 500 Internal server error
  */
 router.post('/signup', async (req, res) => {
   const query = req.body;
-  const {email, password} = query;
+  const {username, password} = query;
 
-  if (email && password) {
-      logger.info(`Incoming create new user for ${email} request`);
+  if (username && password) {
+      logger.info(`Incoming create new user with username: ${username}`);
       try {
-          const {user} = await userController.create({query});
+          const {user, token} = await userController.create({query});
 
-          res.status(200).send({ data: {user, token} });
+          res.setHeader("Kinto-Session-User-Token", token);
+
+          res.status(200).send({ data: {user} });
       } catch (e) {
           errorResp({res, code:500, e, _in: 'signup'});
       }
@@ -51,22 +43,14 @@ router.post('/signup', async (req, res) => {
 });
 
 /**
- * @api {post} /:id Get user by id
+ * @api {get} /:id Get user by id
  * @apiName GetUser
  * @apiGroup Users
  *
- * @apiSuccess {Object} User obj
+ * @apiSuccess (Success_200) {Object} User obj
  *
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *    {
- *       data: {user}
- *    }
- *
- * @apiErrorExample {json} Error-Response:
- *      HTTP/1.1 500 Internal server error
  */
-router.post('/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const query = req.body;
   if (query) {
@@ -92,22 +76,14 @@ router.post('/:id', async (req, res) => {
 
 // SESSION
 /**
- * @api {post} /auth/login Login user
+ * @api {post} /login Login user
  * @apiName LoginUser
  * @apiGroup Users
  *
- * @apiSuccess {Object} User obj
+ * @apiSuccess (Success_200) {Object} User obj
  *
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *    {
- *       data: {authToken}
- *    }
- *
- * @apiErrorExample {json} Error-Response:
- *      HTTP/1.1 500 Internal server error
  */
-router.post('/auth/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   const query = req.body;
   if (query) {
       try {
@@ -125,21 +101,13 @@ router.post('/auth/login', async (req, res) => {
 
 /**
  * @api {post} /login Login user
- * @apiName LoginUser
+ * @apiName LogoutUser
  * @apiGroup Users
  *
- * @apiSuccess {Object} Ok response
+ * @apiSuccess (Success_200) {Object} Ok response
  *
- * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *    {
- *       ok: true
- *    }
- *
- * @apiErrorExample {json} Error-Response:
- *      HTTP/1.1 500 Internal server error
  */
-router.post('/auth/logout', async (req, res) => {
+router.post('/logout', async (req, res) => {
   const query = req.body;
   const { token } = query;
   if (token) {

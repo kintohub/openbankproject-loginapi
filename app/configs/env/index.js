@@ -32,6 +32,11 @@ config.secrets = {
     removeEmailToken:   process.env.REMOVE_EMAIL_TOKEN_SECRET   || 'local email_remove_token',
 };
 
+config.consumerKey = process.env.CONSUMER_KEY;
+config.consumerSecret = process.env.CONSUMER_SECRET;
+
+config.baseApiUrl = process.env.BASE_API_URL;
+
 config.expireTimes = {
     // in milliseconds
     token: process.env.TOKEN_EXPIRE_TIME || 7 * 24 * 60 * 60 * 1000,

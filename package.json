@@ -1,8 +1,8 @@
 {
-  "name": "node-example",
+  "name": "openbankproject-loginapi",
   "version": "0.1.0",
-  "description": "A Sample node microservice for kintohub",
-  "main": "index.js",
+  "description": "openbankproject-loginapi node microservice for kintohub",
+  "main": "app.js",
   "scripts": {
     "start": "babel-node ./app.js",
     "prod": "NODE_ENV=prod babel-node ./app.js",
@@ -13,14 +13,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kintohub/node-example.git"
+    "url": "git+https://github.com/kintohub/openbankproject-loginapi.git"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/kintohub/node-example/issues"
-  },
-  "homepage": "https://github.com/kintohub/node-example#readme",
+  "author": "Roman Zhyliov",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",

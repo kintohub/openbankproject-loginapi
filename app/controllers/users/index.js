@@ -1,120 +1,117 @@
-import { logger }     from '~/app/configs/runtime/logger';
+import fetch from "node-fetch";
 
-import BcryptService    from '~/app/services/bcrypt';
-import SerializeService from '~/app/services/serialize';
+import { logger }     from '~/app/configs/runtime/logger';
+import config       from '~/app/configs/env';
 
 import {
+  handleSuccessError,
   failedReject,
   unexpectedReject,
   insufficientParamsReject,
   notFoundReject} from '~/app/controllers/utils';
 
 export default class UsersController {
-  create = async ({query, serialize = true, isSparse = true}) => {
+  create = async ({query}) => {
     const {
       email,
+      username,
       password,
-      signupDeviceToken,
+      firstName,
+      lastName
     } = query;
-    if (email && password) {
-      logger.info(`[UsersController->create]attempting to signup user with ${email}`);
+    if (username && password && email && firstName && lastName) {
+      logger.info(`[UsersController->create]attempting to signup user by ${username}`);
       try {
-          const user = await User.findOne({ email: email.toLowerCase() });
-          if (user === null) { // unique user
-              const hash = await BcryptService.encryptPassword(password);
-                // encrypt password
-              const newUser = new User({
-                  email,
-                  password:   hash,
-              });
-              if (signupDeviceToken) {
-                  newUser.deviceTokens = [signupDeviceToken];
-              }
-              const savedUser = await newUser.save();
+        const resp = await fetch(`${config.baseApiUrl}/obp/v2.0.0/users`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+              email,
+              username,
+              password,
+              "first_name":   firstName,
+              "last_name":    lastName
+            })
+        })
+        .then(handleSuccessError).then(json => json)
+        .catch(error => {
+          logger.error(`[UsersController->create] shit happened for username: ${username}: ${JSON.stringify(error)}`);
+          return error;
+        });
 
-              // create tokens
-              const verifyEmailToken
-                = TokenService.signVerifyEmail({ email: savedUser.email });
-              const removeEmailToken
-                = TokenService.signRemoveEmail({ email: savedUser.email });
+        if (resp.error) {
+            return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
+        }
 
-              if (!newUser.isVerified) {
-                  // todo: yes it's is awaitable
-                  sendVerifyEmail({
-                      email: savedUser.email,
-                      verifyEmailToken,
-                      removeEmailToken
-                  }).catch(err => {
-                    // if email is invalid -> delete the fucker and reject
-                    // currently block by AMAZON sandboxing our account
-                    logger.error(`[UsersController->signup] ${err}`);
-                  });
-              }
+        logger.info(`[UsersController->create] got user`);
 
-              // return saved user
-              logger.info(`[UsersController->create]User created with email: ${email}`);
+        const {token} = await this.authorize({username, password});
 
-              const serializer = serialize ?
-                isSparse ? SerializeService.user.sparse : SerializeService.user.full
-                : null;
+        logger.info(`[UsersController->create] got token: ${token}`);
 
-              const returnUser = serializer ? serializer({item: savedUser}) : savedUser;
-              return { user:returnUser};
-          }
-
-          return failedReject({because: 'Email is taken' });
+        return {user: resp, token};
       } catch (e) {
-          return unexpectedReject({_in: "userController->new", because: e});
+          return unexpectedReject({_in: "userController->create", because: e});
       }
     }
     return insufficientParamsReject();
   }
 
   get = async ({
-    query,
-    role,
-    roles,
-    serialize = true,
-    isSparse = true,
+    token,
   }) => {
-    const { token } = query;
     if (token) {
-      const {id} = await TokenService.getUserIdFromToken(token);
-
-      let userQuery = { _id: id};
-
-      if (roles) {
-        userQuery = {
-            ...userQuery,
-            role: { $in: roles },
-        }
-      } else if (role) {
-          userQuery = {
-              ...userQuery,
-              role,
-          }
-      }
-      let user;
       try {
-        user = await User.findOne(userQuery);
-        if (!user || (user.isBanned && user.role !== UserRoles.ROLE_ADMIN)) {
-          return notFoundReject({
-            what:'user',
-            because: "unauthorized",
-            _in: "getShopByTypeAndRemoteId"})
+        const resp = await fetch(`${config.baseApiUrl}/obp/v3.0.0/users/current`, {
+          method: "GET",
+          headers: {
+            "Authorization": `DirectLogin token="${token}"`,
+            "Content-Type": "application/json",
+          }
+        })
+        .then(handleSuccessError).then(json => json)
+        .catch(error => {
+          logger.error(`[UsersController->get] shit happened for username: ${username}: ${JSON.stringify(error)}`);
+          return error;
+        });
+
+        if (resp.error) {
+          return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
         }
-      } catch(e) {
-        logger.error(`[UserController->getBy] query: ${JSON.stringify(query)} And error: ${e.message} `);
-        return unexpectedReject({because:
-          `Error looking for occurred while looking for user with id: ${id}`});
+
+        return {user: resp};
+      } catch (e) {
+          return unexpectedReject({_in: "UsersController->get", because: e});
+      }
+    }
+    return insufficientParamsReject();
+  }
+
+  authorize = async ({
+    username,
+    password,
+  }) => {
+    if (username && password) {
+      const resp = await fetch(`${config.baseApiUrl}/my/logins/direct`, {
+        method: "POST",
+        headers: {
+          "Authorization": `DirectLogin username="${username}", password="${password}", consumer_key="${config.consumerKey}"`,
+          "Content-Type": "application/json",
+        }
+      })
+      .then(handleSuccessError).then(json => json)
+      .catch(error => {
+        logger.error(`[UsersController->authorize] shit happened for username: ${username}: ${JSON.stringify(error)}`);
+        return error;
+      });
+
+      if (resp.error) {
+        return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
       }
 
-      const serializer = serialize ?
-      isSparse ? SerializeService.user.sparse : SerializeService.user.full
-      : null;
-
-      const returnUser = serializer ? serializer({item: user}) : user;
-      return { user:returnUser};
+      return resp;
     }
 
     return insufficientParamsReject();
