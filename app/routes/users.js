@@ -10,14 +10,20 @@ import UserController     from '~/app/controllers/users';
 
 const userController      = new UserController();
 
-/**
- * @api {post} /signup Create new user
- * @apiName CreateUser
- * @apiGroup Users
- *
- * @apiSuccess (Success_200) {Object} User obj
- *
- */
+  /**
+  * @api {post} /signup Create new user
+  * @apiName CreateUser
+  * @apiGroup Users
+  *
+  * @apiParam (Body) {String} username user's nickname
+  * @apiParam (Body) {String} password our password should EITHER be at least 10 characters long and contain mixed numbers and both upper and lower case letters and at least one special character, OR be longer than 16 characters
+  * @apiParam (Body) {String} email User's email
+  * @apiParam (Body) {String} firstName User's first name
+  * @apiParam (Body) {Boolean} lastName User's last name
+  *
+  * @apiSuccess (Success_200) {Object} data user object
+  *
+  */
 router.post('/signup', async (req, res) => {
   const query = req.body;
   const {username, password} = query;
@@ -38,14 +44,14 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-/**
- * @api {get} /me Get meUser
- * @apiName GetUser
- * @apiGroup Users
- *
- * @apiSuccess (Success_200) {Object} User obj
- *
- */
+ /**
+  * @api {get} /me Gets current user
+  * @apiName GetUser
+  * @apiGroup Users
+  *
+  * @apiSuccess (Success_200) {Object} data user object
+  *
+  */
 router.get('/me', async (req, res) => {
   logger.info(`Incoming /me request`);
   const token = req.get("Kinto-Session-User-Token");
@@ -63,14 +69,17 @@ router.get('/me', async (req, res) => {
   }
 });
 
-/**
- * @api {post} /login Login user
- * @apiName LoginUser
- * @apiGroup Users
- *
- * @apiSuccess (Success_200) {Object} User obj
- *
- */
+  /**
+  * @api {post} /login Login user
+  * @apiName LoginUser
+  * @apiGroup Users
+  *
+  * @apiParam (Body) {String} username user's nickname
+  * @apiParam (Body) {String} password our password should EITHER be at least 10 characters long and contain mixed numbers and both upper and lower case letters and at least one special character, OR be longer than 16 characters
+  *
+  * @apiSuccess (Success_200) {Object} data user object
+  *
+  */
 router.post('/login', async (req, res) => {
   const query = req.body;
   if (query) {
@@ -95,7 +104,7 @@ router.post('/login', async (req, res) => {
  * @apiName LogoutUser
  * @apiGroup Users
  *
- * @apiSuccess (Success_200) {Object} Ok response
+ * @apiSuccess (Success_200) {Object} ok ok response
  *
  */
 router.post('/logout', async (req, res) => {
