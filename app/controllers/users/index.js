@@ -56,7 +56,7 @@ export default class UsersController {
           return unexpectedReject({_in: "userController->create", because: e});
       }
     }
-    return insufficientParamsReject();
+    return insufficientParamsReject({_in:"UsersController->authorize"});
   }
 
   get = async ({
@@ -86,7 +86,7 @@ export default class UsersController {
           return unexpectedReject({_in: "UsersController->get", because: e});
       }
     }
-    return insufficientParamsReject();
+    return insufficientParamsReject({_in:"UsersController->get"});
   }
 
   authorize = async ({
@@ -114,6 +114,6 @@ export default class UsersController {
       return resp;
     }
 
-    return insufficientParamsReject();
+    return insufficientParamsReject({_in:"UsersController->authorize"});
   }
 }

@@ -6,7 +6,6 @@
  * Module dependencies
  */
 
-
 import express          from 'express';
 import { createServer } from 'http';
 
@@ -54,7 +53,7 @@ exports = module.exports = (async function() {
     };
 
     return server.listen(port, () => {
-        logger.info(`${env} server is listening on port ${port}`);
+        logger.info(`${env} server v-04 is listening on port ${port}`);
     });
 })()
 

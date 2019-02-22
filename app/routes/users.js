@@ -7,12 +7,8 @@ const router =  express.Router();
 import {errorResp} from '~/app/routes/utils';
 
 import UserController     from '~/app/controllers/users';
-import UserAuthController from '~/app/controllers/users/auth';
 
 const userController      = new UserController();
-const userAuthController  =  new UserAuthController();
-
-const meId = 'me';
 
 /**
  * @api {post} /signup Create new user
@@ -31,7 +27,7 @@ router.post('/signup', async (req, res) => {
       try {
           const {user, token} = await userController.create({query});
 
-          res.setHeader("Kinto-Session-User-Token", token);
+          res.set("Kinto-Session-User-Token", token);
 
           res.status(200).send({ data: {user} });
       } catch (e) {
@@ -43,28 +39,21 @@ router.post('/signup', async (req, res) => {
 });
 
 /**
- * @api {get} /:id Get user by id
+ * @api {get} /me Get meUser
  * @apiName GetUser
  * @apiGroup Users
  *
  * @apiSuccess (Success_200) {Object} User obj
  *
  */
-router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  const query = req.body;
-  if (query) {
+router.get('/me', async (req, res) => {
+  logger.info(`Incoming /me request`);
+  const token = req.get("Kinto-Session-User-Token");
+  logger.info(`And token is ${token}`);
+  if (token) {
       try {
-          const isMe = id === meId;
+          const {user} = await userController.get({ token });
 
-          // TODO get stuff from session
-
-          const {user} = isMe
-              ? await userController.get({ query })
-              : await userController.get({
-                  query,
-                  roles: [UserRoles.ROLE_ADMIN],
-              });
           res.status(200).send({ data: {user} });
       } catch (e) {
           errorResp({res, code:500, e, _in: 'users/:id'});
@@ -74,7 +63,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// SESSION
 /**
  * @api {post} /login Login user
  * @apiName LoginUser
@@ -88,9 +76,12 @@ router.post('/login', async (req, res) => {
   if (query) {
       try {
           logger.info(`Incoming login request`);
-          const {user} = await userAuthController.login({ query });
+          const {token} = await userController.authorize(query);
+          const {user} = await userController.get({ token });
 
-          res.status(200).send({ data: { token }});
+          res.set("Kinto-Session-User-Token", token);
+
+          res.status(200).send({ data: { user }});
       } catch (e) {
           errorResp({res, code:500, e, _in: 'users/login'});
       }
@@ -100,7 +91,7 @@ router.post('/login', async (req, res) => {
 });
 
 /**
- * @api {post} /login Login user
+ * @api {post} /logout Logout user
  * @apiName LogoutUser
  * @apiGroup Users
  *
@@ -108,18 +99,11 @@ router.post('/login', async (req, res) => {
  *
  */
 router.post('/logout', async (req, res) => {
-  const query = req.body;
-  const { token } = query;
-  if (token) {
-      try {
-          // TODO
-
-          res.status(200).send({ ok: true });
-      } catch (e) {
-          errorResp({res, code:500, e, _in: 'users/auth/logout'});
-      }
-  } else {
-      errorResp({res, _in: 'logout'});
+  try {
+    res.set("Kinto-Session-User-Token", "");
+    res.status(200).send({ ok: true });
+  } catch (e) {
+      errorResp({res, code:500, e, _in: 'users/auth/logout'});
   }
 });
 
