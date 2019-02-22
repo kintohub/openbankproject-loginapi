@@ -42,7 +42,8 @@ export default class UsersController {
         });
 
         if (resp.error) {
-            return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
+          const {code = 500} = resp.error;
+          return unexpectedReject({status: code,because: resp.error, _in: "UsersController.create"});
         }
 
         logger.info(`[UsersController->create] got user`);
@@ -78,7 +79,8 @@ export default class UsersController {
         });
 
         if (resp.error) {
-          return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
+          const {code = 500} = resp.error;
+          return unexpectedReject({status: code,because: resp.error, _in: "UsersController.get"});
         }
 
         return {user: resp};
@@ -108,7 +110,8 @@ export default class UsersController {
       });
 
       if (resp.error) {
-        return unexpectedReject({because: resp.error, _in: "CloverRemoteUserController.create"})
+        const {code = 500} = resp.error;
+        return unexpectedReject({status: code,because: resp.error, _in: "UsersController.authorize"});
       }
 
       return resp;

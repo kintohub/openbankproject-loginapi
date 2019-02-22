@@ -22,8 +22,9 @@ export const conflictReject = (obj) => (({because, _in}) =>
   genericReject({status: 409, because, _in}))({because:"", _in:"somePlace", ...obj});
 export const unimplementedReject = (obj) => (({because, _in}) =>
     genericReject({status: 501, because, _in}))({because:"", _in:"somePlace",...obj});
-export const unexpectedReject = (obj) => (({because, _in}) =>
-    genericReject({status: 502, because, _in}))({because: "Things did not worked out 🤷‍♂️", _in:"somePlace",...obj});
+
+export const unexpectedReject = (obj) => (({because, _in, status}) =>
+    genericReject({status, because, _in}))({status: 500, because: "Things did not worked out 🤷‍♂️",_in:"somePlace",...obj});
 
 export const handleSuccessError = function(response){
     const isJson = !!response.headers.get("content-type").match('application/json');
