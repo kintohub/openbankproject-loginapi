@@ -14,8 +14,8 @@ Referencing flow from: https://github.com/OpenBankProject/OBP-API/wiki/Direct-Lo
 
 * `npm run prod` -> run in remote
 
-# User Session
- Block is using kinto-session headers to store user related information (auth token)
+# Magic ✨ User Session
+ Block is using kinto-session magic headers to store user related information (auth token), which means **no need of session process on instance 😱**. the app is completely stateless thanks to that.
 
 # Env vars
   - check .env-example
